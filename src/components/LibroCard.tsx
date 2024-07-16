@@ -36,9 +36,6 @@ const LibroCard: React.FC<LibroCardProps> = ({ book }) => {
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
-  const handleOpenSolicitudModal = () => setSolicitudModal(true);
-  const handleCloseSolicitudModal = () => setSolicitudModal(false);
-
   return (
     <>
       <Card sx={{ maxWidth: 345 }} onClick={handleOpenModal}>
