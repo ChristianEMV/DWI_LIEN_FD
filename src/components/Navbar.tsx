@@ -86,7 +86,7 @@ function Navbar() {
         <Image
           src={logo}
           alt="Logo"
-          style={{ height: "50px", marginRight: "300px", objectFit: "contain" }}
+          style={{ height: "50px", marginRight: "450px", objectFit: "contain" }}
         />
         </a>
         </Link>
