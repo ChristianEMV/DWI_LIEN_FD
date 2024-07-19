@@ -67,7 +67,7 @@ const page = () => {
   ];
 
   return (
-    <div style={{ paddingTop: '90px' }}>
+    <div style={{ paddingTop: '10px' }}>
       <Container maxWidth="md">
         <Grid container spacing={4}>
           {books.map((book) => (

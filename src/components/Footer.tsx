@@ -3,7 +3,8 @@ import { Box, Typography, Grid, Link } from '@mui/material';
 
 function Footer() {
   return (
-    <Box component="footer" sx={{ 
+    <>
+     <Box component="footer" sx={{ 
       bgcolor: 'primary.main', 
       color: 'white', 
       py: 3, 
@@ -55,6 +56,7 @@ function Footer() {
         </Typography>
       </Box>
     </Box>
+    </>
   );
 }
 

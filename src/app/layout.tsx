@@ -5,7 +5,7 @@ export default function RootLayout({ children }) {
         <html lang="en">
         <body>
           <Navbar/>
-          <div style={{ marginTop: '64px' }}></div>
+          <div style={{ marginTop: '80px' }}></div>
           {children}
           <br/>
           <Footer/> 

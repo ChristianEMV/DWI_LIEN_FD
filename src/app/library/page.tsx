@@ -22,7 +22,11 @@ import {
   Select,
   MenuItem,
   DialogContentText,
+  Fab,
+  FormHelperText,
+  Alert,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -59,6 +63,85 @@ export default function BookTable() {
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
+  const [openAddModal, setOpenAddModal] = useState(false);
+  const [error, setError] = useState("");
+
+  const [newBook, setNewBook] = useState<Book>({
+    id: 0,
+    title: "",
+    author: "",
+    year: 0,
+    description: "",
+    status: "En stock",
+  });
+
+  const handleAddBookChange = (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+    field: keyof Book
+  ) => {
+    setNewBook((prevBook) => ({
+      ...prevBook,
+      [field]: event.target.value,
+    }));
+  };
+
+  const handleAddBookSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    // Validaciones
+    let isValid = true;
+    let errorMessage = "";
+
+    // Título (no vacío)
+    if (!newBook.title.trim()) {
+      isValid = false;
+      errorMessage = "El título es obligatorio.";
+    }
+    // Autor (no vacío)
+    else if (!newBook.author.trim()) {
+      isValid = false;
+      errorMessage = "El autor es obligatorio.";
+    }
+    // Año (número válido entre 1450 y el año actual)
+    else if (
+      isNaN(newBook.year) ||
+      newBook.year < 1450 || // Considerando la invención de la imprenta
+      newBook.year > new Date().getFullYear()
+    ) {
+      isValid = false;
+      errorMessage =
+        "El año debe ser un número válido entre 1450 y el año actual.";
+    }
+    // Descripción (no vacía)
+    else if (!newBook.description.trim()) {
+      isValid = false;
+      errorMessage = "La descripción es obligatoria.";
+    }
+
+    // Enviar los datos al backend
+    console.log("Nuevo libro:", newBook);
+
+    // Limpiar el formulario y cerrar el modal
+    setNewBook({
+      id: 0,
+      title: "",
+      author: "",
+      year: 0,
+      description: "",
+      status: "En stock",
+    });
+    handleCloseAddModal();
+  };
+
+  const handleOpenAddModal = () => {
+    setOpenAddModal(true);
+  };
+
+  const handleCloseAddModal = () => {
+    setOpenAddModal(false);
+  };
 
   const handleDeleteClick = (book: Book) => {
     setBookToDelete(book);
@@ -93,7 +176,6 @@ export default function BookTable() {
   };
   return (
     <>
-      <br />
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -246,6 +328,99 @@ export default function BookTable() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={openAddModal} onClose={handleCloseAddModal}>
+        <form onSubmit={handleAddBookSubmit}>
+          <DialogTitle>Agregar Nuevo Libro</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="title"
+              label="Título"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={newBook.title}
+              onChange={(e) => handleAddBookChange(e, "title")}
+              required
+            />
+            <TextField
+              margin="dense"
+              id="author"
+              label="Autor"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={newBook.author}
+              onChange={(e) => handleAddBookChange(e, "author")}
+              required
+            />
+            <TextField
+              margin="dense"
+              id="year"
+              label="Año"
+              type="number"
+              fullWidth
+              variant="standard"
+              value={newBook.year === 0 ? "" : newBook.year}
+              onChange={(e) => handleAddBookChange(e, "year")}
+              required
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+            <TextField
+              margin="dense"
+              id="description"
+              label="Descripción"
+              type="text"
+              fullWidth
+              multiline
+              rows={4}
+              variant="standard"
+              value={newBook.description}
+              onChange={(e) => handleAddBookChange(e, "description")}
+              required
+            />
+            <FormControl fullWidth margin="dense">
+              <InputLabel id="status-label" shrink>
+                Estado
+              </InputLabel>
+              <Select
+                labelId="status-label"
+                id="status"
+                value={newBook.status}
+                onChange={(e) => handleAddBookChange(e, "status")}
+              >
+                <MenuItem value="En stock">En stock</MenuItem>
+                <MenuItem value="En préstamo">En préstamo</MenuItem>
+              </Select>
+              <FormHelperText>
+                Indica si el libro está disponible.
+              </FormHelperText>
+            </FormControl>
+            <input type="file" accept="image/*" />
+            {error && <Alert severity="error">{error}</Alert>}{" "}
+            {/* Mostrar mensaje de error */}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAddModal}>Cancelar</Button>
+            <Button type="submit" color="primary">
+              Guardar Libro
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleOpenAddModal}
+        sx={{
+          position: "fixed",
+          bottom: 16,
+          right: 16,
+        }}
+      >
+        <AddIcon />
+      </Fab>
     </>
   );
 }
