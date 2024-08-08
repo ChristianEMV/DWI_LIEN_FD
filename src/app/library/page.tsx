@@ -32,7 +32,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { getBooks, updateBook, deleteBook} from '../../services/api';
+import { getBooks, updateBook, deleteBook } from '../../services/api';
 
 interface Book {
   idbook: number;
@@ -85,10 +85,18 @@ export default function BookTable() {
   }, []);
 
   const handleAddBookChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, field: keyof Book) => {
-    setNewBook((prevBook) => ({
-      ...prevBook,
-      [field]: event.target.value,
-    }));
+    const value = event.target.value;
+    if (field === 'status') {
+      setNewBook((prevBook) => ({
+        ...prevBook,
+        [field]: value === 'true',
+      }));
+    } else {
+      setNewBook((prevBook) => ({
+        ...prevBook,
+        [field]: value,
+      }));
+    }
   };
 
   const handleEditClick = (book: Book) => {
@@ -101,10 +109,17 @@ export default function BookTable() {
     setSelectedBook(null);
   };
 
-  const handleEditBookChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, field: keyof Book) => {
-    setSelectedBook((prevBook) =>
-      prevBook ? { ...prevBook, [field]: event.target.value } : prevBook
-    );
+  const handleEditBookChange = (event: React.ChangeEvent<{ value: unknown }>, field: keyof Book) => {
+    const value = event.target.value;
+    if (field === 'status') {
+      setSelectedBook((prevBook) =>
+        prevBook ? { ...prevBook, [field]: value === 'true' } : prevBook
+      );
+    } else {
+      setSelectedBook((prevBook) =>
+        prevBook ? { ...prevBook, [field]: value } : prevBook
+      );
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -262,172 +277,161 @@ export default function BookTable() {
               onRowsPerPageChange={handleChangeRowsPerPage}
             />
           </TableContainer>
+
+          <Fab
+            color="primary"
+            aria-label="add"
+            sx={{ position: 'fixed', bottom: 16, right: 16 }}
+            onClick={handleOpenAddModal}
+          >
+            <AddIcon />
+          </Fab>
+
+          {/* Modal para editar libro */}
           <Dialog open={openModal} onClose={handleCloseModal}>
-            <form onSubmit={handleSubmit}>
-              <DialogTitle>Editar Libro</DialogTitle>
-              <DialogContent>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="titulo"
-                  label="Título"
-                  type="text"
-                  fullWidth
-                  variant="standard"
-                  value={selectedBook?.titulo || ''}
-                  onChange={(e) => handleEditBookChange(e, 'titulo')}
-                />
-                <TextField
-                  margin="dense"
-                  id="autor"
-                  label="Autor"
-                  type="text"
-                  fullWidth
-                  variant="standard"
-                  value={selectedBook?.autor || ''}
-                  onChange={(e) => handleEditBookChange(e, 'autor')}
-                />
-                <TextField
-                  margin="dense"
-                  id="fecha_publicacion"
-                  label="Fecha de Publicación"
-                  type="date"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  variant="standard"
-                  value={selectedBook?.fecha_publicacion || ''}
-                  onChange={(e) => handleEditBookChange(e, 'fecha_publicacion')}
-                />
-                <TextField
-                  margin="dense"
-                  id="editorial"
-                  label="Editorial"
-                  type="text"
-                  fullWidth
-                  variant="standard"
-                  value={selectedBook?.editorial || ''}
-                  onChange={(e) => handleEditBookChange(e, 'editorial')}
-                />
-                <TextField
-                  margin="dense"
-                  id="categoria"
-                  label="Categoría"
-                  type="text"
-                  fullWidth
-                  variant="standard"
-                  value={selectedBook?.categoria || ''}
-                  onChange={(e) => handleEditBookChange(e, 'categoria')}
-                />
-                <TextField
-                  margin="dense"
-                  id="descripcion"
-                  label="Descripción"
-                  type="text"
-                  fullWidth
-                  variant="standard"
-                  value={selectedBook?.descripcion || ''}
-                  onChange={(e) => handleEditBookChange(e, 'descripcion')}
-                />
-                <FormControl fullWidth margin="dense">
-                  <InputLabel>Estado</InputLabel>
-                  <Select
-                    value={selectedBook?.status ? 'En stock' : 'En préstamo'}
-                    onChange={(e) => handleEditBookChange(e, 'status')}
-                    label="Estado"
-                  >
-                    <MenuItem value="true">En stock</MenuItem>
-                    <MenuItem value="false">En préstamo</MenuItem>
-                  </Select>
-                </FormControl>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseModal}>Cancelar</Button>
-                <Button type="submit">Guardar</Button>
-              </DialogActions>
-            </form>
+            <DialogTitle>Editar Libro</DialogTitle>
+            <DialogContent>
+              {selectedBook && (
+                <form onSubmit={handleSubmit}>
+                  <TextField
+                    margin="dense"
+                    label="Título"
+                    fullWidth
+                    variant="outlined"
+                    value={selectedBook.titulo}
+                    onChange={(e) => handleEditBookChange(e, 'titulo')}
+                  />
+                  <TextField
+                    margin="dense"
+                    label="Autor"
+                    fullWidth
+                    variant="outlined"
+                    value={selectedBook.autor}
+                    onChange={(e) => handleEditBookChange(e, 'autor')}
+                  />
+                  <TextField
+                    margin="dense"
+                    label="Fecha de Publicación"
+                    fullWidth
+                    variant="outlined"
+                    value={selectedBook.fecha_publicacion}
+                    onChange={(e) => handleEditBookChange(e, 'fecha_publicacion')}
+                  />
+                  <TextField
+                    margin="dense"
+                    label="Editorial"
+                    fullWidth
+                    variant="outlined"
+                    value={selectedBook.editorial}
+                    onChange={(e) => handleEditBookChange(e, 'editorial')}
+                  />
+                  <TextField
+                    margin="dense"
+                    label="Categoría"
+                    fullWidth
+                    variant="outlined"
+                    value={selectedBook.categoria}
+                    onChange={(e) => handleEditBookChange(e, 'categoria')}
+                  />
+                  <TextField
+                    margin="dense"
+                    label="Descripción"
+                    fullWidth
+                    variant="outlined"
+                    value={selectedBook.descripcion}
+                    onChange={(e) => handleEditBookChange(e, 'descripcion')}
+                  />
+                  <FormControl fullWidth margin="dense">
+                    <InputLabel>Estado</InputLabel>
+                    <Select
+                      value={selectedBook.status ? 'true' : 'false'}
+                      onChange={(e) => handleEditBookChange(e, 'status')}
+                      label="Estado"
+                    >
+                      <MenuItem value="true">En stock</MenuItem>
+                      <MenuItem value="false">En préstamo</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <DialogActions>
+                    <Button onClick={handleCloseModal} color="primary">Cancelar</Button>
+                    <Button type="submit" color="primary">Guardar</Button>
+                  </DialogActions>
+                </form>
+              )}
+            </DialogContent>
           </Dialog>
+
+          {/* Modal para eliminar libro */}
           <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-            <DialogTitle>Confirmar Eliminación</DialogTitle>
+            <DialogTitle>Eliminar Libro</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                ¿Estás seguro de que deseas eliminar este libro?
+                ¿Estás seguro de que quieres eliminar este libro?
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
+              <Button onClick={handleCloseDeleteDialog} color="primary">Cancelar</Button>
               <Button onClick={handleConfirmDelete} color="error">Eliminar</Button>
             </DialogActions>
           </Dialog>
+
+          {/* Modal para agregar libro */}
           <Dialog open={openAddModal} onClose={handleCloseAddModal}>
-            <form onSubmit={handleAddBookSubmit}>
-              <DialogTitle>Agregar Nuevo Libro</DialogTitle>
-              <DialogContent>
+            <DialogTitle>Agregar Libro</DialogTitle>
+            <DialogContent>
+              <form onSubmit={handleAddBookSubmit}>
                 <TextField
-                  autoFocus
                   margin="dense"
-                  id="titulo"
                   label="Título"
-                  type="text"
                   fullWidth
-                  variant="standard"
+                  variant="outlined"
                   value={newBook.titulo}
                   onChange={(e) => handleAddBookChange(e, 'titulo')}
                 />
                 <TextField
                   margin="dense"
-                  id="autor"
                   label="Autor"
-                  type="text"
                   fullWidth
-                  variant="standard"
+                  variant="outlined"
                   value={newBook.autor}
                   onChange={(e) => handleAddBookChange(e, 'autor')}
                 />
                 <TextField
                   margin="dense"
-                  id="fecha_publicacion"
                   label="Fecha de Publicación"
-                  type="date"
                   fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  variant="standard"
+                  variant="outlined"
                   value={newBook.fecha_publicacion}
                   onChange={(e) => handleAddBookChange(e, 'fecha_publicacion')}
                 />
                 <TextField
                   margin="dense"
-                  id="editorial"
                   label="Editorial"
-                  type="text"
                   fullWidth
-                  variant="standard"
+                  variant="outlined"
                   value={newBook.editorial}
                   onChange={(e) => handleAddBookChange(e, 'editorial')}
                 />
                 <TextField
                   margin="dense"
-                  id="categoria"
                   label="Categoría"
-                  type="text"
                   fullWidth
-                  variant="standard"
+                  variant="outlined"
                   value={newBook.categoria}
                   onChange={(e) => handleAddBookChange(e, 'categoria')}
                 />
                 <TextField
                   margin="dense"
-                  id="descripcion"
                   label="Descripción"
-                  type="text"
                   fullWidth
-                  variant="standard"
+                  variant="outlined"
                   value={newBook.descripcion}
                   onChange={(e) => handleAddBookChange(e, 'descripcion')}
                 />
                 <FormControl fullWidth margin="dense">
                   <InputLabel>Estado</InputLabel>
                   <Select
-                    value={newBook.status ? 'En stock' : 'En préstamo'}
+                    value={newBook.status ? 'true' : 'false'}
                     onChange={(e) => handleAddBookChange(e, 'status')}
                     label="Estado"
                   >
@@ -435,28 +439,20 @@ export default function BookTable() {
                     <MenuItem value="false">En préstamo</MenuItem>
                   </Select>
                 </FormControl>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseAddModal}>Cancelar</Button>
-                <Button type="submit">Agregar</Button>
-              </DialogActions>
-            </form>
+                <DialogActions>
+                  <Button onClick={handleCloseAddModal} color="primary">Cancelar</Button>
+                  <Button type="submit" color="primary">Agregar</Button>
+                </DialogActions>
+              </form>
+            </DialogContent>
           </Dialog>
-          <Fab
-            color="primary"
-            aria-label="add"
-            onClick={handleOpenAddModal}
-            sx={{ position: 'fixed', bottom: 16, right: 16 }}
-          >
-            <AddIcon />
-          </Fab>
+
           <Snackbar
             open={openSnackbar}
             autoHideDuration={6000}
             onClose={() => setOpenSnackbar(false)}
             message={snackbarMessage}
           />
-          {error && <Alert severity="error">{error}</Alert>}
         </>
       )}
     </>
