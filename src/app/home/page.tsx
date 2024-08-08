@@ -1,84 +1,111 @@
 'use client';
 
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Grid,
   Container,
-  Button,
-  CardContent,
-  Card,
-  CardMedia,
-} from "@mui/material";
-import LibroCard from "../../components/LibroCard";
+  CircularProgress,
+  Alert
+} from '@mui/material';
+import LibroCard from '../../components/LibroCard';
+import { getBooks } from '../../services/api';
 
-const page = () => {
-  const books = [
-    {
-      id: 1,
-      title: "Cien años de soledad",
-      author: "Gabriel García Márquez",
-      description:
-        "La historia de la familia Buendía a lo largo de siete generaciones en el ficticio pueblo de Macondo.",
-      coverImage: "cien-anos-de-soledad.jpg",
-    },
-    {
-      id: 2,
-      title: "El principito",
-      author: "Antoine de Saint-Exupéry",
-      description:
-        "Un cuento poético y filosófico sobre un pequeño príncipe que viaja por diferentes planetas.",
-      coverImage: "el-principito.jpg",
-    },
-    {
-      id: 3,
-      title: "Don Quijote de la Mancha",
-      author: "Miguel de Cervantes",
-      description:
-        "Las aventuras de un hidalgo que, influenciado por la lectura de libros de caballerías, decide convertirse en caballero andante.",
-      coverImage: "don-quijote.jpg",
-    },
-    {
-      id: 4,
-      title: "Don Quijote de la Mancha",
-      author: "Miguel de Cervantes",
-      description:
-        "Las aventuras de un hidalgo que, influenciado por la lectura de libros de caballerías, decide convertirse en caballero andante.",
-      coverImage: "don-quijote.jpg",
-    },
-    {
-      id: 5,
-      title: "Don Quijote de la Mancha",
-      author: "Miguel de Cervantes",
-      description:
-        "Las aventuras de un hidalgo que, influenciado por la lectura de libros de caballerías, decide convertirse en caballero andante.",
-      coverImage: "don-quijote.jpg",
-    },
+const Page = () => {
+  const [books, setBooks] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
-    {
-      id: 6,
-      title: "Don Quijote de la Mancha",
-      author: "Miguel de Cervantes",
-      description:
-        "Las aventuras de un hidalgo que, influenciado por la lectura de libros de caballerías, decide convertirse en caballero andante.",
-      coverImage: "don-quijote.jpg",
-    },
-  ];
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const booksData = await getBooks();
+        setBooks(booksData);
+      } catch (err) {
+        setError('Error al recuperar los libros');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  const handleScroll = () => {
+    setScrollPosition(window.scrollY);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const getOpacity = () => {
+
+    return Math.max(0, 1 - scrollPosition / 1800);
+  };
 
   return (
-    <div style={{ paddingTop: '10px' }}>
-      <Container maxWidth="md">
-        <Grid container spacing={4}>
-          {books.map((book) => (
-            <Grid item key={book.id} xs={12} sm={6} md={4}>
-              <LibroCard book={book} />
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-    </div>
+    <Container maxWidth="md" sx={{ paddingY: 4 }}>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {error && <Alert severity="error">{error}</Alert>}
+          <Typography variant="h4" gutterBottom>
+            Biblioteca virtual
+          </Typography>
+          <Grid container spacing={4}>
+            {books.map((book) => (
+              <Grid item key={book.id} xs={12} sm={6} md={4}>
+                <LibroCard book={book} />
+              </Grid>
+            ))}
+          </Grid>
+          <Box
+            sx={{
+              position: 'fixed',
+              bottom: 1,
+              left: 16,
+              width: '300px',
+              height: 'auto',
+              opacity: getOpacity(),
+              transition: 'opacity 0.5s ease-out',
+            }}
+          >
+            <img
+              src="/../salto3.png"
+              alt="niño brincando 1"
+              style={{ width: '100%', height: 'auto' }}
+            />
+          </Box>
+          <Box
+            sx={{
+              position: 'fixed',
+              bottom: 190,
+              right: 16,
+              width: '300px',
+              height: 'auto',
+              opacity: getOpacity(),
+              transition: 'opacity 0.5s ease-out',
+            }}
+          >
+            <img
+              src="/../salto4.png"
+              alt="niño brincando 2"
+              style={{ width: '100%', height: 'auto' }}
+            />
+          </Box>
+        </>
+      )}
+    </Container>
   );
 };
 
-export default page;
+export default Page;
