@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, memo } from "react";
 import {
   Box,
   Typography,
   Grid,
-  Container,
   Button,
   CardContent,
   Card,
@@ -20,21 +19,46 @@ import CancelIcon from "@mui/icons-material/Cancel";
 
 interface LibroCardProps {
   book: {
-    id: number;
-    title: string;
-    author: string;
-    description: string;
+    idbook: number;
+    titulo: string;
+    autor: string;
+    fecha_publicacion: number;
+    editorial: string;
+    categoria: string;
+    descripcion: string;
     coverImage: string;
-    available: boolean;
+    status: boolean;
   };
 }
 
-const LibroCard: React.FC<LibroCardProps> = ({ book }) => {
+const randomImageUrls = [
+  "https://images.unsplash.com/photo-1512820790803-83ca734da794",
+  "https://images.unsplash.com/photo-1543269865-cbf427effbad",
+  "https://images.unsplash.com/photo-1560807707-8cc77767d783",
+  "https://images.unsplash.com/photo-1556740749-887f6717d7e4",
+  "https://images.unsplash.com/photo-1556740749-8864f6717d7e4",
+
+];
+
+const getRandomImageUrl = () => {
+  return randomImageUrls[Math.floor(Math.random() * randomImageUrls.length)];
+};
+
+const LibroCard: React.FC<LibroCardProps> = memo(({ book }) => {
   const [openModal, setOpenModal] = useState(false);
-  const [solicitudModal, setSolicitudModal] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>(book.coverImage ? `/images/${book.coverImage}` : getRandomImageUrl());
+  const fallbackImageUrl = "/fallback.png";
+
+  useEffect(() => {
+    setImageUrl(book.coverImage ? `/images/${book.coverImage}` : getRandomImageUrl());
+  }, [book.coverImage]);
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+
+  const handleImageError = () => {
+    setImageUrl(fallbackImageUrl);
+  };
 
   return (
     <>
@@ -43,28 +67,26 @@ const LibroCard: React.FC<LibroCardProps> = ({ book }) => {
           <CardMedia
             component="img"
             height="140"
-            image={`/images/${book.coverImage}`}
-            alt={book.title}
+            image={imageUrl}
+            alt={book.titulo}
+            onError={handleImageError}
           />
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">
-              {book.title}
+              {book.titulo}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Por: {book.author}
+              Por: {book.autor}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {book.description}
+              {book.descripcion}
             </Typography>
           </CardContent>
         </CardActionArea>
         <Box sx={{ position: "absolute", top: 8, right: 8 }}>
-          <Tooltip title={book.available ? "Disponible" : "No disponible"}>
-            <IconButton
-              size="small"
-              color={book.available ? "success" : "error"}
-            >
-              {book.available ? <CheckCircleIcon /> : <CancelIcon />}
+          <Tooltip title={book.status ? "Disponible" : "No disponible"}>
+            <IconButton size="small" color={book.status ? "success" : "error"}>
+              {book.status ? <CheckCircleIcon /> : <CancelIcon />}
             </IconButton>
           </Tooltip>
         </Box>
@@ -87,41 +109,43 @@ const LibroCard: React.FC<LibroCardProps> = ({ book }) => {
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <Image
-                src={`/images/${book.coverImage}`}
-                alt={book.title}
+                src={imageUrl}
+                alt={book.titulo}
                 width={200}
                 height={300}
+                onError={handleImageError}
+                layout="responsive"
               />
             </Grid>
             <Grid item xs={12} md={8}>
               <Typography variant="h4" gutterBottom>
-                {book.title}
+                {book.titulo}
               </Typography>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                Por: {book.author}
+                Por: {book.autor}
               </Typography>
               <Typography variant="body1" paragraph>
-                {book.description}
+                {book.descripcion}
               </Typography>
             </Grid>
             <Grid item xs={12}>
-            <Link 
-                  href={{
-                    pathname: '/solicitud',
-                    query: { book: JSON.stringify(book) },
-                  }}
-                  legacyBehavior
-                >
-                  <Button variant="contained" color="primary">
-                    Solicitar Libro
-                  </Button>
-                </Link>
+              <Link
+                href={{
+                  pathname: "/solicitud",
+                  query: { book: JSON.stringify(book) },
+                }}
+                legacyBehavior
+              >
+                <Button variant="contained" color="primary">
+                  Solicitar Libro
+                </Button>
+              </Link>
             </Grid>
           </Grid>
         </Box>
       </Modal>
     </>
   );
-};
+});
 
 export default LibroCard;

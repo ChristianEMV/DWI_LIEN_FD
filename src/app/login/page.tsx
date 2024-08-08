@@ -7,20 +7,20 @@ import {
   TextField,
   Button,
   Alert,
-  Grid,
   Box,
 } from "@mui/material";
 import logo from "../../assets/imgs/LIEN.png";
 import Image from "next/image";
 import imagenFondo from "../../../public/fondo.jpg";
 import Link from "next/link";
+import axios from 'axios';
 
-function page() {
+function Page() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
@@ -34,7 +34,20 @@ function page() {
       return;
     }
 
-    alert("Inicio de sesión exitoso (simulado)");
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/your-endpoint`, {
+        username,
+        password
+      });
+
+      if (response.status === 200) {
+        const { id_token, access_token, refresh_token, role } = response.data;
+        alert("Inicio de sesión exitoso");
+        // Aquí puedes guardar los tokens en el estado, localStorage o cookies, según tus necesidades
+      }
+    } catch (error) {
+      setError(error.response?.data?.error_message || "Error al iniciar sesión");
+    }
   };
 
   return (
@@ -52,7 +65,7 @@ function page() {
       <Card>
         <CardContent>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Image src={logo} alt="Imagen de fondo" width={160} height={180} style={{objectFit: "contain" }} />
+            <Image src={logo} alt="Imagen de fondo" width={160} height={180} style={{ objectFit: "contain" }} />
             <Box>
               <Typography
                 variant="h5"
@@ -105,4 +118,4 @@ function page() {
   );
 }
 
-export default page;
+export default Page;
