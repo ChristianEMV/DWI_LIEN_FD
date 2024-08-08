@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
   TableContainer,
   Table,
@@ -14,7 +14,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
   TextField,
   Select,
@@ -24,11 +23,14 @@ import {
   Button,
   Box,
   Alert,
+  Fab,
+  Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Fab } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
 
 interface User {
   id: number;
@@ -39,8 +41,8 @@ interface User {
 }
 
 const users: User[] = [
-  { id: 1, name: 'Juan Pénez', email: 'juan@example.com', phone: '123-456-7890', role: 'Administrador' },
-  { id: 2, name: 'María Cómez', email: 'maria@example.com', phone: '987-654-3210', role: 'Usuario' },
+  { id: 1, name: 'Juan Pérez', email: 'juan@example.com', phone: '123-456-7890', role: 'Administrador' },
+  { id: 2, name: 'María Gómez', email: 'maria@example.com', phone: '987-654-3210', role: 'Usuario' },
 ];
 
 function page() {
@@ -48,49 +50,68 @@ function page() {
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isOpenAddModal, setIsOpenAddModal] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-const handleEditClick = (user: User) => {
-  setSelectedUser(user);
-  setOpenModal(true);
-};
+  const handleEditClick = (user: User) => {
+    setSelectedUser(user);
+    setOpenModal(true);
+  };
 
-const handleDeleteClick = (user: User) => {
-  setUserToDelete(user);
-  setOpenDeleteDialog(true);
-};
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setOpenDeleteDialog(true);
+  };
 
-const handleCloseDeleteDialog = () => {
-  setOpenDeleteDialog(false);
-  setUserToDelete(null);
-};
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setUserToDelete(null);
+  };
 
-const handleConfirmDelete = () => {
-  console.log('Eliminando usuario:', userToDelete?.id);
-  handleCloseDeleteDialog();
-};
+  const handleConfirmDelete = () => {
+    setLoading(true);
+    setTimeout(() => {
+      console.log('Eliminando usuario:', userToDelete?.id);
+      setSnackbarMessage('Usuario eliminado exitosamente');
+      setOpenSnackbar(true);
+      setLoading(false);
+      handleCloseDeleteDialog();
+    }, 1000); // Simula un retardo de 1 segundo para la eliminación
+  };
 
-const handleCloseModal = () => {
-  setOpenModal(false);
-  setSelectedUser(null);
-};
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedUser(null);
+  };
 
-const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  console.log('Datos editados:', selectedUser);
-};
+  const handleEditUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      console.log('Usuario editado:', selectedUser);
+      setSnackbarMessage('Usuario editado exitosamente');
+      setOpenSnackbar(true);
+      setLoading(false);
+      handleCloseModal();
+    }, 1000); // Simula un retardo de 1 segundo para la edición
+  };
 
-const handleEditUserChange = (
-  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  field: keyof User
-) => {
-  setSelectedUser((prevUser) => ({
-    ...prevUser,
-    [field]: event.target.value,
-  }));
-};
+  const handleEditUserChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    field: keyof User
+  ) => {
+    setSelectedUser((prevUser) => ({
+      ...prevUser,
+      [field]: event.target.value,
+    }));
+  };
 
-const [openAddModal, setOpenAddModal] = useState(false);
+  const handleSnackbarClose = () => {
+    setOpenSnackbar(false);
+  };
+
+  const [openAddModal, setOpenAddModal] = useState(false);
   const [newUser, setNewUser] = useState<User>({
     id: 0,
     name: '',
@@ -128,59 +149,57 @@ const [openAddModal, setOpenAddModal] = useState(false);
       return;
     }
 
-    console.log('Agregando nuevo usuario:', newUser);
-
-    setNewUser({ id: 0, name: '', email: '', phone: '', role: '' });
-    setAddError('');
-    handleCloseAddModal();
+    setLoading(true);
+    setTimeout(() => {
+      console.log('Agregando nuevo usuario:', newUser);
+      setSnackbarMessage('Usuario agregado exitosamente');
+      setOpenSnackbar(true);
+      setNewUser({ id: 0, name: '', email: '', phone: '', role: '' });
+      setAddError('');
+      setLoading(false);
+      handleCloseAddModal();
+    }, 1000); // Simula un retardo de 1 segundo para la adición
   };
 
-const handleEditUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  // Validar los datos del usuario editado aquí
-
-  console.log('Usuario editado:', selectedUser);
-
-  handleCloseModal();
-};
   return (
     <>
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Usuario</TableCell>
-            <TableCell>Correo Electrónico</TableCell>
-            <TableCell>Teléfono</TableCell>
-            <TableCell>Acciones</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.id}</TableCell>
-              <TableCell>{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.phone}</TableCell>
-              <TableCell>
-                <Tooltip title="Editar">
-                  <IconButton aria-label="editar" color="primary" onClick={() => handleEditClick(user)}>
-                    <EditIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Eliminar">
-                  <IconButton aria-label="eliminar" color="error" onClick={() => handleDeleteClick(user)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
+      <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Usuario</TableCell>
+              <TableCell>Correo Electrónico</TableCell>
+              <TableCell>Teléfono</TableCell>
+              <TableCell align="center">Acciones</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-    <Dialog open={openModal} onClose={handleCloseModal}>
+          </TableHead>
+          <TableBody>
+            {users.map((user, index) => (
+              <TableRow key={user.id} sx={{ backgroundColor: index % 2 === 0 ? '#f7f7f7' : '#ffffff' }}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone}</TableCell>
+                <TableCell align="center">
+                  <Tooltip title="Editar">
+                    <IconButton aria-label="editar" color="primary" onClick={() => handleEditClick(user)}>
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Eliminar">
+                    <IconButton aria-label="eliminar" color="error" onClick={() => handleDeleteClick(user)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Dialog open={openModal} onClose={handleCloseModal}>
         {selectedUser && (
           <form onSubmit={handleEditUserSubmit}>
             <DialogTitle>Editar Usuario</DialogTitle>
@@ -244,6 +263,7 @@ const handleEditUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
           </form>
         )}
       </Dialog>
+
       <Dialog open={openAddModal} onClose={handleCloseAddModal}>
         <form onSubmit={handleAddUserSubmit}>
           <DialogTitle>Agregar Nuevo Usuario</DialogTitle>
@@ -298,7 +318,7 @@ const handleEditUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
               </FormControl>
             </Box>
 
-            {addError && <Alert severity="error">{addError}</Alert>} 
+            {addError && <Alert severity="error">{addError}</Alert>}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseAddModal}>Cancelar</Button>
@@ -308,11 +328,36 @@ const handleEditUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
           </DialogActions>
         </form>
       </Dialog>
-      <Fab color="primary" aria-label="add" onClick={handleOpenAddModal} sx={{ position: 'fixed', bottom: 16, right: 16 }}>
+
+      <Fab color="primary" aria-label="add" onClick={handleOpenAddModal} sx={{ position: 'fixed', bottom: 16, right: 16, boxShadow: 3 }}>
         <PersonAddIcon />
       </Fab>
+
+      {loading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: 2,
+            borderRadius: 2,
+            zIndex: 1200,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+      />
     </>
-  )
+  );
 }
 
-export default page
+export default page;

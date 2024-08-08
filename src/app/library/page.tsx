@@ -23,16 +23,16 @@ import {
   MenuItem,
   DialogContentText,
   Fab,
-  FormHelperText,
   Alert,
   CircularProgress,
   TablePagination,
-  Box
+  Box,
+  Snackbar,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { getBooks, updateBook, deleteBook } from '../../services/api';
+import { getBooks, updateBook, deleteBook} from '../../services/api';
 
 interface Book {
   idbook: number;
@@ -66,6 +66,8 @@ export default function BookTable() {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -116,6 +118,8 @@ export default function BookTable() {
           )
         );
         handleCloseModal();
+        setSnackbarMessage('Libro actualizado con éxito');
+        setOpenSnackbar(true);
       } catch (error) {
         setError('Error al actualizar el libro');
       }
@@ -140,6 +144,8 @@ export default function BookTable() {
           prevBooks.filter((book) => book.idbook !== bookToDelete.idbook)
         );
         handleCloseDeleteDialog();
+        setSnackbarMessage('Libro eliminado con éxito');
+        setOpenSnackbar(true);
       } catch (error) {
         setError('Error al eliminar el libro');
       }
@@ -444,6 +450,12 @@ export default function BookTable() {
           >
             <AddIcon />
           </Fab>
+          <Snackbar
+            open={openSnackbar}
+            autoHideDuration={6000}
+            onClose={() => setOpenSnackbar(false)}
+            message={snackbarMessage}
+          />
           {error && <Alert severity="error">{error}</Alert>}
         </>
       )}

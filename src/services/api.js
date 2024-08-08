@@ -23,9 +23,7 @@ export const updateBook = async (book) => {
 
 export const deleteBook = async (idbook) => {
   try {
-    const response = await axios.delete(`https://pcbdpjmpt2.execute-api.us-east-2.amazonaws.com/Prod/delete/`,{
-      data: {idbook}
-    });
+    const response = await axios.delete(`https://pcbdpjmpt2.execute-api.us-east-2.amazonaws.com/Prod/delete/${idbook}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting book: ", error);
