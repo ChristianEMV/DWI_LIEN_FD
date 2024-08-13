@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from "react";
 import {
   TableContainer,
   Table,
@@ -28,11 +28,17 @@ import {
   TablePagination,
   Box,
   Snackbar,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { getBooks, updateBook, deleteBook } from '../../services/api';
+  Typography,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  getBooks,
+  createBook,
+  updateBook,
+  deleteBook,
+} from "../../services/api";
 
 interface Book {
   idbook: number;
@@ -50,15 +56,15 @@ export default function BookTable() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [newBook, setNewBook] = useState<Book>({
     idbook: 0,
-    titulo: '',
-    autor: '',
-    fecha_publicacion: '',
-    editorial: '',
-    categoria: '',
-    descripcion: '',
+    titulo: "",
+    autor: "",
+    fecha_publicacion: "",
+    editorial: "",
+    categoria: "",
+    descripcion: "",
     status: true,
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -67,7 +73,7 @@ export default function BookTable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -75,7 +81,7 @@ export default function BookTable() {
         const booksData = await getBooks();
         setBooks(booksData);
       } catch (err) {
-        setError('Error al recuperar los libros');
+        setError("Error al recuperar los libros");
       } finally {
         setLoading(false);
       }
@@ -84,12 +90,17 @@ export default function BookTable() {
     fetchBooks();
   }, []);
 
-  const handleAddBookChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, field: keyof Book) => {
+  const handleAddBookChange = (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+    field: keyof Book
+  ) => {
     const value = event.target.value;
-    if (field === 'status') {
+    if (field === "status") {
       setNewBook((prevBook) => ({
         ...prevBook,
-        [field]: value === 'true',
+        [field]: value === "true",
       }));
     } else {
       setNewBook((prevBook) => ({
@@ -109,11 +120,14 @@ export default function BookTable() {
     setSelectedBook(null);
   };
 
-  const handleEditBookChange = (event: React.ChangeEvent<{ value: unknown }>, field: keyof Book) => {
+  const handleEditBookChange = (
+    event: React.ChangeEvent<{ value: unknown }>,
+    field: keyof Book
+  ) => {
     const value = event.target.value;
-    if (field === 'status') {
+    if (field === "status") {
       setSelectedBook((prevBook) =>
-        prevBook ? { ...prevBook, [field]: value === 'true' } : prevBook
+        prevBook ? { ...prevBook, [field]: value === "true" } : prevBook
       );
     } else {
       setSelectedBook((prevBook) =>
@@ -133,10 +147,10 @@ export default function BookTable() {
           )
         );
         handleCloseModal();
-        setSnackbarMessage('Libro actualizado con éxito');
+        setSnackbarMessage("Libro actualizado con éxito");
         setOpenSnackbar(true);
       } catch (error) {
-        setError('Error al actualizar el libro');
+        setError("Error al actualizar el libro");
       }
     }
   };
@@ -159,10 +173,10 @@ export default function BookTable() {
           prevBooks.filter((book) => book.idbook !== bookToDelete.idbook)
         );
         handleCloseDeleteDialog();
-        setSnackbarMessage('Libro eliminado con éxito');
+        setSnackbarMessage("Libro eliminado con éxito");
         setOpenSnackbar(true);
       } catch (error) {
-        setError('Error al eliminar el libro');
+        setError("Error al eliminar el libro");
       }
     }
   };
@@ -175,177 +189,250 @@ export default function BookTable() {
     setOpenAddModal(false);
   };
 
-  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const paginatedBooks = books.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const paginatedBooks = books.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
-  function handleAddBookSubmit(event: FormEvent<HTMLFormElement>): void {
-    throw new Error('Function not implemented.');
-  }
+  const handleAddBookSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const addedBook = await createBook(newBook);
+      setBooks((prevBooks) => [...prevBooks, addedBook]);
+      handleCloseAddModal();
+      setSnackbarMessage("Libro agregado con éxito");
+      setOpenSnackbar(true);
+    } catch (error) {
+      setError("Error al agregar el libro");
+    }
+  };
 
   return (
     <>
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
+        >
           <CircularProgress />
         </Box>
       ) : (
         <>
-          <TableContainer
-            component={Paper}
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{ mb: 4, textAlign: "center" }}
+          >
+            Biblioteca
+          </Typography>
+          <Box
             sx={{
-              boxShadow: 3,
-              borderRadius: 2,
-              overflow: 'hidden',
-              margin: 2
+              display: "flex",
+              justifyContent: "center", // Para centrar horizontalmente
+              width: "100%", // Ocupa el ancho completo de la pantalla
+              px: 2, // Espacio horizontal adicional
             }}
           >
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Título</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Autor</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Fecha de Publicación</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Editorial</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Categoría</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {paginatedBooks.map((book, index) => (
-                  <TableRow
-                    key={book.idbook}
-                    sx={{
-                      backgroundColor: index % 2 === 0 ? '#fafafa' : '#ffffff',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                      }
-                    }}
-                  >
-                    <TableCell>{book.idbook}</TableCell>
-                    <TableCell>{book.titulo}</TableCell>
-                    <TableCell>{book.autor}</TableCell>
-                    <TableCell>{book.fecha_publicacion}</TableCell>
-                    <TableCell>{book.editorial}</TableCell>
-                    <TableCell>{book.categoria}</TableCell>
-                    <TableCell>{book.descripcion}</TableCell>
-                    <TableCell>{book.status ? 'En stock' : 'En préstamo'}</TableCell>
-                    <TableCell>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          aria-label="editar"
-                          color="primary"
-                          sx={{ '&:hover': { backgroundColor: 'rgba(0, 0, 255, 0.1)' } }}
-                          onClick={() => handleEditClick(book)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton
-                          aria-label="eliminar"
-                          color="error"
-                          sx={{ '&:hover': { backgroundColor: 'rgba(255, 0, 0, 0.1)' } }}
-                          onClick={() => handleDeleteClick(book)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+            <TableContainer
+              component={Paper}
+              sx={{
+                boxShadow: 3,
+                borderRadius: 2,
+                overflow: "hidden",
+                width: "100%", // Ocupa el ancho completo del contenedor
+              }}
+            >
+              <Table>
+                <TableHead sx={{ backgroundColor: "#1976d2", color: "#fff" }}>
+                  <TableRow>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      ID
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Título
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Autor
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Fecha de Publicación
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Editorial
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Categoría
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Descripción
+                    </TableCell>
+                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                      Estado
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        color: "#fff",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                      }}
+                    >
+                      Acciones
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              sx={{ marginTop: 2 }}
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={books.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </TableContainer>
-
+                </TableHead>
+                <TableBody>
+                  {paginatedBooks.map((book, index) => (
+                    <TableRow
+                      key={book.idbook}
+                      sx={{
+                        backgroundColor: index % 2 === 0 ? "#f7f7f7" : "#ffffff",
+                      }}
+                    >
+                      <TableCell>{book.idbook}</TableCell>
+                      <TableCell>{book.titulo}</TableCell>
+                      <TableCell>{book.autor}</TableCell>
+                      <TableCell>{book.fecha_publicacion}</TableCell>
+                      <TableCell>{book.editorial}</TableCell>
+                      <TableCell>{book.categoria}</TableCell>
+                      <TableCell>{book.descripcion}</TableCell>
+                      <TableCell>
+                        {book.status ? "En stock" : "En préstamo"}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Editar">
+                          <IconButton
+                            aria-label="editar"
+                            color="primary"
+                            onClick={() => handleEditClick(book)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton
+                            aria-label="eliminar"
+                            color="error"
+                            onClick={() => handleDeleteClick(book)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={books.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </TableContainer>
+          </Box>
           <Fab
             color="primary"
             aria-label="add"
-            sx={{ position: 'fixed', bottom: 16, right: 16 }}
+            sx={{ position: "fixed", bottom: 16, right: 16 }}
             onClick={handleOpenAddModal}
           >
             <AddIcon />
           </Fab>
-
-          {/* Modal para editar libro */}
           <Dialog open={openModal} onClose={handleCloseModal}>
             <DialogTitle>Editar Libro</DialogTitle>
             <DialogContent>
               {selectedBook && (
                 <form onSubmit={handleSubmit}>
                   <TextField
-                    margin="dense"
+                    margin="normal"
+                    fullWidth
                     label="Título"
-                    fullWidth
-                    variant="outlined"
                     value={selectedBook.titulo}
-                    onChange={(e) => handleEditBookChange(e, 'titulo')}
+                    onChange={(e) =>
+                      handleEditBookChange(e, "titulo")
+                    }
+                    required
                   />
                   <TextField
-                    margin="dense"
+                    margin="normal"
+                    fullWidth
                     label="Autor"
-                    fullWidth
-                    variant="outlined"
                     value={selectedBook.autor}
-                    onChange={(e) => handleEditBookChange(e, 'autor')}
+                    onChange={(e) =>
+                      handleEditBookChange(e, "autor")
+                    }
+                    required
                   />
                   <TextField
-                    margin="dense"
+                    margin="normal"
+                    fullWidth
                     label="Fecha de Publicación"
-                    fullWidth
-                    variant="outlined"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
                     value={selectedBook.fecha_publicacion}
-                    onChange={(e) => handleEditBookChange(e, 'fecha_publicacion')}
+                    onChange={(e) =>
+                      handleEditBookChange(e, "fecha_publicacion")
+                    }
+                    required
                   />
                   <TextField
-                    margin="dense"
+                    margin="normal"
+                    fullWidth
                     label="Editorial"
-                    fullWidth
-                    variant="outlined"
                     value={selectedBook.editorial}
-                    onChange={(e) => handleEditBookChange(e, 'editorial')}
+                    onChange={(e) =>
+                      handleEditBookChange(e, "editorial")
+                    }
+                    required
                   />
                   <TextField
-                    margin="dense"
+                    margin="normal"
+                    fullWidth
                     label="Categoría"
-                    fullWidth
-                    variant="outlined"
                     value={selectedBook.categoria}
-                    onChange={(e) => handleEditBookChange(e, 'categoria')}
+                    onChange={(e) =>
+                      handleEditBookChange(e, "categoria")
+                    }
+                    required
                   />
                   <TextField
-                    margin="dense"
-                    label="Descripción"
+                    margin="normal"
                     fullWidth
-                    variant="outlined"
+                    label="Descripción"
                     value={selectedBook.descripcion}
-                    onChange={(e) => handleEditBookChange(e, 'descripcion')}
+                    onChange={(e) =>
+                      handleEditBookChange(e, "descripcion")
+                    }
+                    required
                   />
-                  <FormControl fullWidth margin="dense">
+                  <FormControl fullWidth margin="normal">
                     <InputLabel>Estado</InputLabel>
                     <Select
-                      value={selectedBook.status ? 'true' : 'false'}
-                      onChange={(e) => handleEditBookChange(e, 'status')}
+                      value={selectedBook.status ? "true" : "false"}
+                      onChange={(e) =>
+                        handleEditBookChange(e, "status")
+                      }
                       label="Estado"
                     >
                       <MenuItem value="true">En stock</MenuItem>
@@ -353,86 +440,110 @@ export default function BookTable() {
                     </Select>
                   </FormControl>
                   <DialogActions>
-                    <Button onClick={handleCloseModal} color="primary">Cancelar</Button>
-                    <Button type="submit" color="primary">Guardar</Button>
+                    <Button onClick={handleCloseModal} color="primary">
+                      Cancelar
+                    </Button>
+                    <Button type="submit" color="primary">
+                      Guardar
+                    </Button>
                   </DialogActions>
                 </form>
               )}
             </DialogContent>
           </Dialog>
-
-          {/* Modal para eliminar libro */}
           <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
             <DialogTitle>Eliminar Libro</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                ¿Estás seguro de que quieres eliminar este libro?
+                ¿Está seguro de que desea eliminar el libro{" "}
+                {bookToDelete?.titulo}? Esta acción no se puede deshacer.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDeleteDialog} color="primary">Cancelar</Button>
-              <Button onClick={handleConfirmDelete} color="error">Eliminar</Button>
+              <Button onClick={handleCloseDeleteDialog} color="primary">
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmDelete}
+                color="error"
+              >
+                Eliminar
+              </Button>
             </DialogActions>
           </Dialog>
-
-          {/* Modal para agregar libro */}
           <Dialog open={openAddModal} onClose={handleCloseAddModal}>
             <DialogTitle>Agregar Libro</DialogTitle>
             <DialogContent>
               <form onSubmit={handleAddBookSubmit}>
                 <TextField
-                  margin="dense"
+                  margin="normal"
+                  fullWidth
                   label="Título"
-                  fullWidth
-                  variant="outlined"
                   value={newBook.titulo}
-                  onChange={(e) => handleAddBookChange(e, 'titulo')}
+                  onChange={(e) =>
+                    handleAddBookChange(e, "titulo")
+                  }
+                  required
                 />
                 <TextField
-                  margin="dense"
+                  margin="normal"
+                  fullWidth
                   label="Autor"
-                  fullWidth
-                  variant="outlined"
                   value={newBook.autor}
-                  onChange={(e) => handleAddBookChange(e, 'autor')}
+                  onChange={(e) =>
+                    handleAddBookChange(e, "autor")
+                  }
+                  required
                 />
                 <TextField
-                  margin="dense"
+                  margin="normal"
+                  fullWidth
                   label="Fecha de Publicación"
-                  fullWidth
-                  variant="outlined"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
                   value={newBook.fecha_publicacion}
-                  onChange={(e) => handleAddBookChange(e, 'fecha_publicacion')}
+                  onChange={(e) =>
+                    handleAddBookChange(e, "fecha_publicacion")
+                  }
+                  required
                 />
                 <TextField
-                  margin="dense"
+                  margin="normal"
+                  fullWidth
                   label="Editorial"
-                  fullWidth
-                  variant="outlined"
                   value={newBook.editorial}
-                  onChange={(e) => handleAddBookChange(e, 'editorial')}
+                  onChange={(e) =>
+                    handleAddBookChange(e, "editorial")
+                  }
+                  required
                 />
                 <TextField
-                  margin="dense"
+                  margin="normal"
+                  fullWidth
                   label="Categoría"
-                  fullWidth
-                  variant="outlined"
                   value={newBook.categoria}
-                  onChange={(e) => handleAddBookChange(e, 'categoria')}
+                  onChange={(e) =>
+                    handleAddBookChange(e, "categoria")
+                  }
+                  required
                 />
                 <TextField
-                  margin="dense"
-                  label="Descripción"
+                  margin="normal"
                   fullWidth
-                  variant="outlined"
+                  label="Descripción"
                   value={newBook.descripcion}
-                  onChange={(e) => handleAddBookChange(e, 'descripcion')}
+                  onChange={(e) =>
+                    handleAddBookChange(e, "descripcion")
+                  }
+                  required
                 />
-                <FormControl fullWidth margin="dense">
+                <FormControl fullWidth margin="normal">
                   <InputLabel>Estado</InputLabel>
                   <Select
-                    value={newBook.status ? 'true' : 'false'}
-                    onChange={(e) => handleAddBookChange(e, 'status')}
+                    value={newBook.status ? "true" : "false"}
+                    onChange={(e) =>
+                      handleAddBookChange(e, "status")
+                    }
                     label="Estado"
                   >
                     <MenuItem value="true">En stock</MenuItem>
@@ -440,19 +551,44 @@ export default function BookTable() {
                   </Select>
                 </FormControl>
                 <DialogActions>
-                  <Button onClick={handleCloseAddModal} color="primary">Cancelar</Button>
-                  <Button type="submit" color="primary">Agregar</Button>
+                  <Button onClick={handleCloseAddModal} color="primary">
+                    Cancelar
+                  </Button>
+                  <Button type="submit" color="primary">
+                    Agregar
+                  </Button>
                 </DialogActions>
               </form>
             </DialogContent>
           </Dialog>
-
           <Snackbar
             open={openSnackbar}
             autoHideDuration={6000}
             onClose={() => setOpenSnackbar(false)}
-            message={snackbarMessage}
-          />
+          >
+            <Alert
+              onClose={() => setOpenSnackbar(false)}
+              severity="success"
+              sx={{ width: "100%" }}
+            >
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
+          {error && (
+            <Snackbar
+              open={true}
+              autoHideDuration={6000}
+              onClose={() => setError("")}
+            >
+              <Alert
+                onClose={() => setError("")}
+                severity="error"
+                sx={{ width: "100%" }}
+              >
+                {error}
+              </Alert>
+            </Snackbar>
+          )}
         </>
       )}
     </>

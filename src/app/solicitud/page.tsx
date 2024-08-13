@@ -86,10 +86,9 @@ export default function Page() {
         padding: 4,
         background: "linear-gradient(to right, #f7f8fa, #e3e8f0)",
         minHeight: "100vh",
+        position: "relative",
       }}
     >
-      {error && <Alert severity="error">{error}</Alert>}
-      {success && <Alert severity="success">{success}</Alert>}
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
           <Card
@@ -224,6 +223,10 @@ export default function Page() {
                 Enviar Solicitud
               </Button>
             </form>
+            <Box sx={{ mt: 2 }}>
+              {error && <Alert severity="error">{error}</Alert>}
+              {success && <Alert severity="success">{success}</Alert>}
+            </Box>
           </Box>
         </Grid>
       </Grid>

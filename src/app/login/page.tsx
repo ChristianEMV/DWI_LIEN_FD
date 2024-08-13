@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import {
   Card,
@@ -20,7 +21,7 @@ function Page() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -51,8 +52,8 @@ function Page() {
   };
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "grid",
         placeItems: "center",
         minHeight: "100vh",
@@ -60,61 +61,105 @@ function Page() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
+        padding: 2
       }}
     >
-      <Card>
+      <Card
+        sx={{
+          maxWidth: 400,
+          width: '100%',
+          padding: 3,
+          boxShadow: 3,
+          borderRadius: 2,
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        }}
+      >
         <CardContent>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Image src={logo} alt="Imagen de fondo" width={160} height={180} style={{ objectFit: "contain" }} />
-            <Box>
-              <Typography
-                variant="h5"
-                component="h2"
-                color="#13a984"
-                fontStyle="bold"
-                align="center"
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <Image src={logo} alt="Logo de LIEN" width={120} height={120} style={{ objectFit: "contain" }} />
+            <Typography
+              variant="h5"
+              component="h2"
+              color="#13a984"
+              fontWeight="bold"
+              align="center"
+              sx={{ mb: 2 }}
+            >
+              Inicio de Sesión
+            </Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <form onSubmit={handleSubmit}>
+              <TextField
+                label="Correo Electrónico"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                sx={{
+                  "& .MuiInputLabel-root": {
+                    color: "text.primary",
+                  },
+                  "& .MuiInputBase-root": {
+                    borderRadius: 1,
+                  },
+                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#13a984",
+                  },
+                  "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
+                  }
+                }}
+              />
+              <TextField
+                label="Contraseña"
+                type="password"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{
+                  "& .MuiInputLabel-root": {
+                    color: "text.primary",
+                  },
+                  "& .MuiInputBase-root": {
+                    borderRadius: 1,
+                  },
+                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#13a984",
+                  },
+                  "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                sx={{
+                  mt: 2,
+                  py: 1.5,
+                  fontSize: "16px",
+                  borderRadius: 1,
+                }}
               >
-                Inicio de Sesión
-              </Typography>
-              {error && <Alert severity="error">{error}</Alert>}
-              <form onSubmit={handleSubmit}>
-                <TextField
-                  label="Correo Electronico"
-                  variant="outlined"
-                  fullWidth
-                  margin="normal"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-                <TextField
-                  label="Contraseña"
-                  type="password"
-                  variant="outlined"
-                  fullWidth
-                  margin="normal"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  size="small"
-                >
-                  Iniciar Sesión
-                </Button>
+                Iniciar Sesión
+              </Button>
+              <Box sx={{ mt: 2, textAlign: "center" }}>
                 <Link href="/register">
-                  <Typography variant="body2" color="primary" textAlign="center">
+                  <Typography variant="body2" color="primary">
                     ¿No tienes una cuenta? Regístrate aquí
                   </Typography>
                 </Link>
-              </form>
-            </Box>
+              </Box>
+            </form>
           </Box>
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 }
 
