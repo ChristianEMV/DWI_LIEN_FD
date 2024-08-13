@@ -74,6 +74,9 @@ export default function BookTable() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("success");
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -148,6 +151,7 @@ export default function BookTable() {
         );
         handleCloseModal();
         setSnackbarMessage("Libro actualizado con éxito");
+        setSnackbarSeverity("success");
         setOpenSnackbar(true);
       } catch (error) {
         setError("Error al actualizar el libro");
@@ -174,9 +178,13 @@ export default function BookTable() {
         );
         handleCloseDeleteDialog();
         setSnackbarMessage("Libro eliminado con éxito");
+        setSnackbarSeverity("success");
         setOpenSnackbar(true);
       } catch (error) {
         setError("Error al eliminar el libro");
+        setSnackbarMessage("Error al eliminar el libro");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
       }
     }
   };
@@ -215,9 +223,13 @@ export default function BookTable() {
       setBooks((prevBooks) => [...prevBooks, addedBook]);
       handleCloseAddModal();
       setSnackbarMessage("Libro agregado con éxito");
+      setSnackbarSeverity("success");
       setOpenSnackbar(true);
     } catch (error) {
       setError("Error al agregar el libro");
+      setSnackbarMessage("Error al agregar el libro");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
     }
   };
 
@@ -300,12 +312,7 @@ export default function BookTable() {
                 </TableHead>
                 <TableBody>
                   {paginatedBooks.map((book, index) => (
-                    <TableRow
-                      key={book.idbook}
-                      sx={{
-                        backgroundColor: index % 2 === 0 ? "#f7f7f7" : "#ffffff",
-                      }}
-                    >
+                    <TableRow key={book.idbook}>
                       <TableCell>{book.idbook}</TableCell>
                       <TableCell>{book.titulo}</TableCell>
                       <TableCell>{book.autor}</TableCell>
@@ -314,12 +321,11 @@ export default function BookTable() {
                       <TableCell>{book.categoria}</TableCell>
                       <TableCell>{book.descripcion}</TableCell>
                       <TableCell>
-                        {book.status ? "En stock" : "En préstamo"}
+                        {book.status ? "Disponible" : "No Disponible"}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell>
                         <Tooltip title="Editar">
                           <IconButton
-                            aria-label="editar"
                             color="primary"
                             onClick={() => handleEditClick(book)}
                           >
@@ -328,7 +334,6 @@ export default function BookTable() {
                         </Tooltip>
                         <Tooltip title="Eliminar">
                           <IconButton
-                            aria-label="eliminar"
                             color="error"
                             onClick={() => handleDeleteClick(book)}
                           >
@@ -340,25 +345,31 @@ export default function BookTable() {
                   ))}
                 </TableBody>
               </Table>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={books.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
             </TableContainer>
           </Box>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={books.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
           <Fab
             color="primary"
             aria-label="add"
-            sx={{ position: "fixed", bottom: 16, right: 16 }}
+            sx={{
+              position: "fixed",
+              bottom: 16,
+              right: 16,
+            }}
             onClick={handleOpenAddModal}
           >
             <AddIcon />
           </Fab>
+
+          {/* Dialogo para editar libro */}
           <Dialog open={openModal} onClose={handleCloseModal}>
             <DialogTitle>Editar Libro</DialogTitle>
             <DialogContent>
@@ -366,26 +377,27 @@ export default function BookTable() {
                 <form onSubmit={handleSubmit}>
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
                     label="Título"
                     value={selectedBook.titulo}
                     onChange={(e) =>
                       handleEditBookChange(e, "titulo")
                     }
-                    required
                   />
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
                     label="Autor"
                     value={selectedBook.autor}
                     onChange={(e) =>
                       handleEditBookChange(e, "autor")
                     }
-                    required
                   />
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
                     label="Fecha de Publicación"
                     type="date"
@@ -394,37 +406,38 @@ export default function BookTable() {
                     onChange={(e) =>
                       handleEditBookChange(e, "fecha_publicacion")
                     }
-                    required
                   />
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
                     label="Editorial"
                     value={selectedBook.editorial}
                     onChange={(e) =>
                       handleEditBookChange(e, "editorial")
                     }
-                    required
                   />
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
                     label="Categoría"
                     value={selectedBook.categoria}
                     onChange={(e) =>
                       handleEditBookChange(e, "categoria")
                     }
-                    required
                   />
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
                     label="Descripción"
+                    multiline
+                    rows={4}
                     value={selectedBook.descripcion}
                     onChange={(e) =>
                       handleEditBookChange(e, "descripcion")
                     }
-                    required
                   />
                   <FormControl fullWidth margin="normal">
                     <InputLabel>Estado</InputLabel>
@@ -433,16 +446,13 @@ export default function BookTable() {
                       onChange={(e) =>
                         handleEditBookChange(e, "status")
                       }
-                      label="Estado"
                     >
-                      <MenuItem value="true">En stock</MenuItem>
-                      <MenuItem value="false">En préstamo</MenuItem>
+                      <MenuItem value="true">Disponible</MenuItem>
+                      <MenuItem value="false">No Disponible</MenuItem>
                     </Select>
                   </FormControl>
                   <DialogActions>
-                    <Button onClick={handleCloseModal} color="primary">
-                      Cancelar
-                    </Button>
+                    <Button onClick={handleCloseModal}>Cancelar</Button>
                     <Button type="submit" color="primary">
                       Guardar
                     </Button>
@@ -451,13 +461,93 @@ export default function BookTable() {
               )}
             </DialogContent>
           </Dialog>
-          <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-            <DialogTitle>Eliminar Libro</DialogTitle>
+
+          {/* Dialogo para agregar libro */}
+          <Dialog open={openAddModal} onClose={handleCloseAddModal}>
+            <DialogTitle>Agregar Libro</DialogTitle>
             <DialogContent>
-              <DialogContentText>
-                ¿Está seguro de que desea eliminar el libro{" "}
-                {bookToDelete?.titulo}? Esta acción no se puede deshacer.
-              </DialogContentText>
+              <form onSubmit={handleAddBookSubmit}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Título"
+                  value={newBook.titulo}
+                  onChange={(e) => handleAddBookChange(e, "titulo")}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Autor"
+                  value={newBook.autor}
+                  onChange={(e) => handleAddBookChange(e, "autor")}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Fecha de Publicación"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={newBook.fecha_publicacion}
+                  onChange={(e) => handleAddBookChange(e, "fecha_publicacion")}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Editorial"
+                  value={newBook.editorial}
+                  onChange={(e) => handleAddBookChange(e, "editorial")}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Categoría"
+                  value={newBook.categoria}
+                  onChange={(e) => handleAddBookChange(e, "categoria")}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Descripción"
+                  multiline
+                  rows={4}
+                  value={newBook.descripcion}
+                  onChange={(e) => handleAddBookChange(e, "descripcion")}
+                />
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                    value={newBook.status ? "true" : "false"}
+                    onChange={(e) => handleAddBookChange(e, "status")}
+                  >
+                    <MenuItem value="true">Disponible</MenuItem>
+                    <MenuItem value="false">No Disponible</MenuItem>
+                  </Select>
+                </FormControl>
+                <DialogActions>
+                  <Button onClick={handleCloseAddModal}>Cancelar</Button>
+                  <Button type="submit" color="primary">
+                    Agregar
+                  </Button>
+                </DialogActions>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Diálogo de confirmación de eliminación */}
+          <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+            <DialogTitle>Confirmar Eliminación</DialogTitle>
+            <DialogContent>
+              <Alert severity="warning">
+                ¿Estás seguro de que deseas eliminar el libro{" "}
+                <strong>{bookToDelete?.titulo}</strong>? Esta acción no se puede
+                deshacer.
+              </Alert>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseDeleteDialog} color="primary">
@@ -466,129 +556,28 @@ export default function BookTable() {
               <Button
                 onClick={handleConfirmDelete}
                 color="error"
+                variant="contained"
               >
                 Eliminar
               </Button>
             </DialogActions>
           </Dialog>
-          <Dialog open={openAddModal} onClose={handleCloseAddModal}>
-            <DialogTitle>Agregar Libro</DialogTitle>
-            <DialogContent>
-              <form onSubmit={handleAddBookSubmit}>
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  label="Título"
-                  value={newBook.titulo}
-                  onChange={(e) =>
-                    handleAddBookChange(e, "titulo")
-                  }
-                  required
-                />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  label="Autor"
-                  value={newBook.autor}
-                  onChange={(e) =>
-                    handleAddBookChange(e, "autor")
-                  }
-                  required
-                />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  label="Fecha de Publicación"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  value={newBook.fecha_publicacion}
-                  onChange={(e) =>
-                    handleAddBookChange(e, "fecha_publicacion")
-                  }
-                  required
-                />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  label="Editorial"
-                  value={newBook.editorial}
-                  onChange={(e) =>
-                    handleAddBookChange(e, "editorial")
-                  }
-                  required
-                />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  label="Categoría"
-                  value={newBook.categoria}
-                  onChange={(e) =>
-                    handleAddBookChange(e, "categoria")
-                  }
-                  required
-                />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  label="Descripción"
-                  value={newBook.descripcion}
-                  onChange={(e) =>
-                    handleAddBookChange(e, "descripcion")
-                  }
-                  required
-                />
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Estado</InputLabel>
-                  <Select
-                    value={newBook.status ? "true" : "false"}
-                    onChange={(e) =>
-                      handleAddBookChange(e, "status")
-                    }
-                    label="Estado"
-                  >
-                    <MenuItem value="true">En stock</MenuItem>
-                    <MenuItem value="false">En préstamo</MenuItem>
-                  </Select>
-                </FormControl>
-                <DialogActions>
-                  <Button onClick={handleCloseAddModal} color="primary">
-                    Cancelar
-                  </Button>
-                  <Button type="submit" color="primary">
-                    Agregar
-                  </Button>
-                </DialogActions>
-              </form>
-            </DialogContent>
-          </Dialog>
+
+          {/* Snackbar para mensajes de éxito */}
           <Snackbar
             open={openSnackbar}
             autoHideDuration={6000}
             onClose={() => setOpenSnackbar(false)}
+            message={snackbarMessage}
           >
             <Alert
               onClose={() => setOpenSnackbar(false)}
-              severity="success"
+              severity={snackbarSeverity}
               sx={{ width: "100%" }}
             >
               {snackbarMessage}
             </Alert>
           </Snackbar>
-          {error && (
-            <Snackbar
-              open={true}
-              autoHideDuration={6000}
-              onClose={() => setError("")}
-            >
-              <Alert
-                onClose={() => setError("")}
-                severity="error"
-                sx={{ width: "100%" }}
-              >
-                {error}
-              </Alert>
-            </Snackbar>
-          )}
         </>
       )}
     </>
