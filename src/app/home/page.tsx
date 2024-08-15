@@ -45,7 +45,6 @@ const Page = () => {
   }, []);
 
   const getOpacity = () => {
-
     return Math.max(0, 1 - scrollPosition / 1800);
   };
 
@@ -63,7 +62,7 @@ const Page = () => {
           </Typography>
           <Grid container spacing={4}>
             {books.map((book) => (
-              <Grid item key={book.id} xs={12} sm={6} md={4}>
+              <Grid item key={book.idbook} xs={12} sm={6} md={4}>
                 <LibroCard book={book} />
               </Grid>
             ))}

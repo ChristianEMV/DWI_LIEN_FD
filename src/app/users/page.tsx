@@ -16,10 +16,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Button,
   Box,
   Alert,
@@ -31,14 +27,15 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getUsers } from "../../services/api";
+import { getUsers, addUser, deleteUser } from "../../services/api";
 
 interface User {
-  id: number;
-  name: string;
+  iduser: number;
+  username: string;
+  nombre: string;
   email: string;
   phone: string;
-  role: string;
+  fechanacimiento: string;
 }
 
 function Page() {
@@ -52,20 +49,27 @@ function Page() {
   const [loading, setLoading] = useState(false);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [newUser, setNewUser] = useState<User>({
-    id: 0,
-    name: "",
+    iduser: 0,
+    nombre: "",
     email: "",
     phone: "",
-    role: "",
+    username: "",
+    fechanacimiento: "",
   });
   const [addError, setAddError] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
-      const fetchedUsers = await getUsers();
-      setUsers(fetchedUsers);
-      setLoading(false);
+      try {
+        const fetchedUsers = await getUsers();
+        setUsers(fetchedUsers);
+      } catch (error) {
+        setSnackbarMessage("Error al cargar los usuarios. Intente de nuevo.");
+        setOpenSnackbar(true);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUsers();
@@ -86,15 +90,21 @@ function Page() {
     setUserToDelete(null);
   };
 
-  const handleConfirmDelete = () => {
-    setLoading(true);
-    setTimeout(() => {
-      console.log("Eliminando usuario:", userToDelete?.id);
-      setSnackbarMessage("Usuario eliminado exitosamente");
-      setOpenSnackbar(true);
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }, 1000);
+  const handleConfirmDelete = async () => {
+    if (userToDelete) {
+      setLoading(true);
+      try {
+        await deleteUser(userToDelete.username);
+        setUsers((prevUsers) => prevUsers.filter(user => user.iduser !== userToDelete?.iduser));
+        setSnackbarMessage("Usuario eliminado exitosamente");
+      } catch (error) {
+        setSnackbarMessage("Error al eliminar el usuario. Intente de nuevo.");
+      } finally {
+        setOpenSnackbar(true);
+        setLoading(false);
+        handleCloseDeleteDialog();
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -136,7 +146,14 @@ function Page() {
 
   const handleCloseAddModal = () => {
     setOpenAddModal(false);
-    setNewUser({ id: 0, name: "", email: "", phone: "", role: "" });
+    setNewUser({
+      iduser: 0,
+      nombre: "",
+      email: "",
+      phone: "",
+      fechanacimiento: "",
+      username: "",
+    });
     setAddError("");
   };
 
@@ -150,24 +167,41 @@ function Page() {
     }));
   };
 
-  const handleAddUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddUserSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!newUser.name || !newUser.email || !newUser.phone || !newUser.role) {
+    if (
+      !newUser.nombre ||
+      !newUser.email ||
+      !newUser.phone ||
+      !newUser.fechanacimiento ||
+      !newUser.username
+    ) {
       setAddError("Todos los campos son obligatorios.");
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      console.log("Agregando nuevo usuario:", newUser);
+
+    try {
+      const addedUser = await addUser(newUser);
+      setUsers((prevUsers) => [...prevUsers, addedUser]);
       setSnackbarMessage("Usuario agregado exitosamente");
-      setOpenSnackbar(true);
-      setNewUser({ id: 0, name: "", email: "", phone: "", role: "" });
+      setNewUser({
+        iduser: 0,
+        nombre: "",
+        email: "",
+        phone: "",
+        fechanacimiento: "",
+        username: "",
+      });
       setAddError("");
+    } catch (error) {
+      setAddError("Error al agregar usuario. Intente de nuevo.");
+    } finally {
       setLoading(false);
       handleCloseAddModal();
-    }, 1000);
+    }
   };
 
   return (
@@ -183,6 +217,9 @@ function Page() {
                 ID
               </TableCell>
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                Nombre
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
                 Usuario
               </TableCell>
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
@@ -190,6 +227,9 @@ function Page() {
               </TableCell>
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
                 Teléfono
+              </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                Fecha Nacimiento
               </TableCell>
               <TableCell
                 sx={{ color: "#fff", fontWeight: "bold", textAlign: "center" }}
@@ -201,15 +241,17 @@ function Page() {
           <TableBody>
             {users.map((user, index) => (
               <TableRow
-                key={user.id}
+                key={user.iduser}
                 sx={{
                   backgroundColor: index % 2 === 0 ? "#f7f7f7" : "#ffffff",
                 }}
               >
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.iduser}</TableCell>
+                <TableCell>{user.nombre}</TableCell>
+                <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.phone}</TableCell>
+                <TableCell>{user.fechanacimiento}</TableCell>
                 <TableCell align="center">
                   <Tooltip title="Editar">
                     <IconButton
@@ -245,13 +287,25 @@ function Page() {
                 <TextField
                   autoFocus
                   margin="dense"
-                  id="name"
+                  id="nombre"
                   label="Nombre"
                   type="text"
                   fullWidth
                   variant="outlined"
-                  value={selectedUser.name}
-                  onChange={(e) => handleEditUserChange(e, "name")}
+                  value={selectedUser.nombre}
+                  onChange={(e) => handleEditUserChange(e, "nombre")}
+                  required
+                />
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  id="username"
+                  label="Nombre de Usuario"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={selectedUser.username}
+                  onChange={(e) => handleEditUserChange(e, "username")}
                   required
                 />
                 <TextField
@@ -269,34 +323,31 @@ function Page() {
                   margin="dense"
                   id="phone"
                   label="Teléfono"
-                  type="tel"
+                  type="text"
                   fullWidth
                   variant="outlined"
                   value={selectedUser.phone}
                   onChange={(e) => handleEditUserChange(e, "phone")}
                   required
                 />
-                <FormControl fullWidth>
-                  <InputLabel id="role-label">Rol</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    id="role"
-                    value={selectedUser.role}
-                    onChange={(e) => handleEditUserChange(e, "role")}
-                    required
-                  >
-                    <MenuItem value="Administrador">Administrador</MenuItem>
-                    <MenuItem value="Usuario">Usuario</MenuItem>
-                  </Select>
-                </FormControl>
+                <TextField
+                  margin="dense"
+                  id="fechanacimiento"
+                  label="Fecha de Nacimiento"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  value={selectedUser.fechanacimiento}
+                  onChange={(e) => handleEditUserChange(e, "fechanacimiento")}
+                  required
+                />
               </Box>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseModal} color="secondary">
-                Cancelar
-              </Button>
-              <Button type="submit" color="primary" variant="contained">
-                Guardar Cambios
+              <Button onClick={handleCloseModal}>Cancelar</Button>
+              <Button type="submit" color="primary" disabled={loading}>
+                {loading ? <CircularProgress size={24} /> : "Guardar"}
               </Button>
             </DialogActions>
           </form>
@@ -306,46 +357,51 @@ function Page() {
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
         <DialogContent>
-          <Alert severity="warning">
-            ¿Estás seguro de que deseas eliminar al usuario{" "}
-            <strong>{userToDelete?.name}</strong>? Esta acción no se puede
-            deshacer.
-          </Alert>
+          <Typography>¿Estás seguro de que deseas eliminar este usuario?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="primary">
-            Cancelar
-          </Button>
+          <Button onClick={handleCloseDeleteDialog}>Cancelar</Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
-            variant="contained"
+            disabled={loading}
           >
-            Eliminar
+            {loading ? <CircularProgress size={24} /> : "Eliminar"}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={openAddModal} onClose={handleCloseAddModal}>
         <form onSubmit={handleAddUserSubmit}>
-          <DialogTitle>Agregar Nuevo Usuario</DialogTitle>
+          <DialogTitle>Agregar Usuario</DialogTitle>
           <DialogContent>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <TextField
                 autoFocus
                 margin="dense"
-                id="add-name"
+                id="nombre"
                 label="Nombre"
                 type="text"
                 fullWidth
                 variant="outlined"
-                value={newUser.name}
-                onChange={(e) => handleAddUserChange(e, "name")}
+                value={newUser.nombre}
+                onChange={(e) => handleAddUserChange(e, "nombre")}
                 required
               />
               <TextField
                 margin="dense"
-                id="add-email"
+                id="username"
+                label="Nombre de Usuario"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newUser.username}
+                onChange={(e) => handleAddUserChange(e, "username")}
+                required
+              />
+              <TextField
+                margin="dense"
+                id="email"
                 label="Correo Electrónico"
                 type="email"
                 fullWidth
@@ -356,92 +412,61 @@ function Page() {
               />
               <TextField
                 margin="dense"
-                id="add-phone"
+                id="phone"
                 label="Teléfono"
-                type="tel"
+                type="text"
                 fullWidth
                 variant="outlined"
                 value={newUser.phone}
                 onChange={(e) => handleAddUserChange(e, "phone")}
                 required
               />
-              <FormControl fullWidth>
-                <InputLabel id="add-role-label">Rol</InputLabel>
-                <Select
-                  labelId="add-role-label"
-                  id="add-role"
-                  value={newUser.role}
-                  onChange={(e) => handleAddUserChange(e, "role")}
-                  required
-                >
-                  <MenuItem value="Administrador">Administrador</MenuItem>
-                  <MenuItem value="Usuario">Usuario</MenuItem>
-                </Select>
-              </FormControl>
-              {addError && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                  {addError}
-                </Alert>
-              )}
+              <TextField
+                margin="dense"
+                id="fechanacimiento"
+                label="Fecha de Nacimiento"
+                type="date"
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                value={newUser.fechanacimiento}
+                onChange={(e) => handleAddUserChange(e, "fechanacimiento")}
+                required
+              />
             </Box>
+            {addError && <Alert severity="error" sx={{ mt: 2 }}>{addError}</Alert>}
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseAddModal} color="secondary">
-              Cancelar
-            </Button>
-            <Button type="submit" color="primary" variant="contained">
-              Agregar Usuario
+            <Button onClick={handleCloseAddModal}>Cancelar</Button>
+            <Button type="submit" color="primary" disabled={loading}>
+              {loading ? <CircularProgress size={24} /> : "Agregar"}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
-      <Box sx={{ position: "absolute", bottom: 16, right: 16 }}>
-        <Tooltip title="Agregar Usuario">
-          <Fab
-            aria-label="add"
-            sx={{
-              position: "fixed",
-              bottom: 16,
-              right: 16,
-              backgroundColor: "#13a984",
-              color: "#fff",
-              "&:hover": {
-                backgroundColor: "#08624c",
-              },
-            }}
-            onClick={handleOpenAddModal}
-          >
-            <PersonAddIcon />
-          </Fab>
-        </Tooltip>
-      </Box>
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleOpenAddModal}
+        sx={{ position: "fixed", bottom: 16, right: 16 }}
+      >
+        <PersonAddIcon />
+      </Fab>
 
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        message={snackbarMessage}
-      />
-
-      {loading && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-          }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarMessage.includes("error") ? "error" : "success"}
+          sx={{ width: "100%" }}
         >
-          <CircularProgress size={60} thickness={5} />
-        </Box>
-      )}
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

@@ -50,3 +50,27 @@ export const getUsers = async () => {
     throw error;
   }
 };
+
+export const addUser = async (user) => {
+  try{
+    const response = await axios.post('https://fwa4x6g5k8.execute-api.us-east-2.amazonaws.com/Prod/add', user);
+    return response.data;
+  }catch (error){
+    console.error("Error creating user: ", error);
+    throw error;
+  }
+};
+
+export const deleteUser = async (username) => {
+  try {
+    const response = await axios.request({
+      url: 'https://fwa4x6g5k8.execute-api.us-east-2.amazonaws.com/Prod/delete_user',
+      method: 'POST',
+      data: { username },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting user: ", error);
+    throw error;
+  }
+};

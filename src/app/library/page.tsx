@@ -258,9 +258,9 @@ export default function BookTable() {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "center", // Para centrar horizontalmente
-              width: "100%", // Ocupa el ancho completo de la pantalla
-              px: 2, // Espacio horizontal adicional
+              justifyContent: "center",
+              width: "100%",
+              px: 2,
             }}
           >
             <TableContainer
@@ -269,7 +269,7 @@ export default function BookTable() {
                 boxShadow: 3,
                 borderRadius: 2,
                 overflow: "hidden",
-                width: "100%", // Ocupa el ancho completo del contenedor
+                width: "100%",
               }}
             >
               <Table>
@@ -356,20 +356,27 @@ export default function BookTable() {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
-          <Fab
-            color="primary"
-            aria-label="add"
-            sx={{
-              position: "fixed",
-              bottom: 16,
-              right: 16,
-            }}
-            onClick={handleOpenAddModal}
-          >
-            <AddIcon />
-          </Fab>
+          <Box sx={{ position: "absolute", bottom: 16, right: 16 }}>
+            <Tooltip title="Agregar Libro">
+              <Fab
+                aria-label="add"
+                sx={{
+                  position: "fixed",
+                  bottom: 16,
+                  right: 16,
+                  backgroundColor: "#13a984",
+                  color: "#fff",
+                  "&:hover": {
+                    backgroundColor: "#08624c",
+                  },
+                }}
+                onClick={handleOpenAddModal}
+              >
+                <AddIcon />
+              </Fab>
+            </Tooltip>
+          </Box>
 
-          {/* Dialogo para editar libro */}
           <Dialog open={openModal} onClose={handleCloseModal}>
             <DialogTitle>Editar Libro</DialogTitle>
             <DialogContent>
@@ -381,9 +388,7 @@ export default function BookTable() {
                     fullWidth
                     label="Título"
                     value={selectedBook.titulo}
-                    onChange={(e) =>
-                      handleEditBookChange(e, "titulo")
-                    }
+                    onChange={(e) => handleEditBookChange(e, "titulo")}
                   />
                   <TextField
                     margin="normal"
@@ -391,9 +396,7 @@ export default function BookTable() {
                     fullWidth
                     label="Autor"
                     value={selectedBook.autor}
-                    onChange={(e) =>
-                      handleEditBookChange(e, "autor")
-                    }
+                    onChange={(e) => handleEditBookChange(e, "autor")}
                   />
                   <TextField
                     margin="normal"
@@ -413,9 +416,7 @@ export default function BookTable() {
                     fullWidth
                     label="Editorial"
                     value={selectedBook.editorial}
-                    onChange={(e) =>
-                      handleEditBookChange(e, "editorial")
-                    }
+                    onChange={(e) => handleEditBookChange(e, "editorial")}
                   />
                   <TextField
                     margin="normal"
@@ -423,9 +424,7 @@ export default function BookTable() {
                     fullWidth
                     label="Categoría"
                     value={selectedBook.categoria}
-                    onChange={(e) =>
-                      handleEditBookChange(e, "categoria")
-                    }
+                    onChange={(e) => handleEditBookChange(e, "categoria")}
                   />
                   <TextField
                     margin="normal"
@@ -435,17 +434,13 @@ export default function BookTable() {
                     multiline
                     rows={4}
                     value={selectedBook.descripcion}
-                    onChange={(e) =>
-                      handleEditBookChange(e, "descripcion")
-                    }
+                    onChange={(e) => handleEditBookChange(e, "descripcion")}
                   />
                   <FormControl fullWidth margin="normal">
                     <InputLabel>Estado</InputLabel>
                     <Select
                       value={selectedBook.status ? "true" : "false"}
-                      onChange={(e) =>
-                        handleEditBookChange(e, "status")
-                      }
+                      onChange={(e) => handleEditBookChange(e, "status")}
                     >
                       <MenuItem value="true">Disponible</MenuItem>
                       <MenuItem value="false">No Disponible</MenuItem>
@@ -462,7 +457,6 @@ export default function BookTable() {
             </DialogContent>
           </Dialog>
 
-          {/* Dialogo para agregar libro */}
           <Dialog open={openAddModal} onClose={handleCloseAddModal}>
             <DialogTitle>Agregar Libro</DialogTitle>
             <DialogContent>
@@ -539,7 +533,6 @@ export default function BookTable() {
             </DialogContent>
           </Dialog>
 
-          {/* Diálogo de confirmación de eliminación */}
           <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
             <DialogTitle>Confirmar Eliminación</DialogTitle>
             <DialogContent>
@@ -563,7 +556,6 @@ export default function BookTable() {
             </DialogActions>
           </Dialog>
 
-          {/* Snackbar para mensajes de éxito */}
           <Snackbar
             open={openSnackbar}
             autoHideDuration={6000}
