@@ -14,16 +14,35 @@ import logo from "../../assets/imgs/LIEN.png";
 import Image from "next/image";
 import imagenFondo from "../../../public/fondo.jpg";
 import Link from "next/link";
-import axios from 'axios';
+import { login } from "../../services/api";
+import { useRouter } from 'next/navigation';
+
+interface LoginForm {
+  username: string;
+  password: string;
+}
 
 function Page() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState<LoginForm>({
+    username: "",
+    password: "",
+  });
   const [error, setError] = useState("");
+  const router = useRouter(); 
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setForm((prevForm) => ({
+      ...prevForm,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+
+    const { username, password } = form;
 
     if (username.trim() === "") {
       setError("El nombre de usuario es obligatorio.");
@@ -36,15 +55,14 @@ function Page() {
     }
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/your-endpoint`, {
-        username,
-        password
-      });
+      const response = await login(form);
 
-      if (response.status === 200) {
-        const { id_token, access_token, refresh_token, role } = response.data;
+      if (response) {
+        const { id_token, access_token, refresh_token, role } = response;
+        localStorage.setItem('authToken',id_token);
+        localStorage.setItem('userRole', role);
+        router.push('/');
         alert("Inicio de sesión exitoso");
-        // Aquí puedes guardar los tokens en el estado, localStorage o cookies, según tus necesidades
       }
     } catch (error) {
       setError(error.response?.data?.error_message || "Error al iniciar sesión");
@@ -90,12 +108,13 @@ function Page() {
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <form onSubmit={handleSubmit}>
               <TextField
-                label="Correo Electrónico"
+                label="Usuario"
+                name="username"
                 variant="outlined"
                 fullWidth
                 margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={form.username}
+                onChange={handleChange}
                 sx={{
                   "& .MuiInputLabel-root": {
                     color: "text.primary",
@@ -113,12 +132,13 @@ function Page() {
               />
               <TextField
                 label="Contraseña"
+                name="password"
                 type="password"
                 variant="outlined"
                 fullWidth
                 margin="normal"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={form.password}
+                onChange={handleChange}
                 sx={{
                   "& .MuiInputLabel-root": {
                     color: "text.primary",
@@ -151,7 +171,7 @@ function Page() {
               <Box sx={{ mt: 2, textAlign: "center" }}>
                 <Link href="/register">
                   <Typography variant="body2" color="primary">
-                    ¿No tienes una cuenta? Regístrate aquí
+                    ¿No has cambiado tu contraseña? cambiala aqui
                   </Typography>
                 </Link>
               </Box>

@@ -17,51 +17,78 @@ import Image from "next/image";
 import imagenFondo from "../../../public/fondo.jpg";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { changePassword } from "../../services/api";
+
+interface User {
+  username: string;
+  temporary_password: string;
+  new_password: string;
+}
 
 function Page() {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false); // Estado para el mensaje de éxito
-  const [snackbarOpen, setSnackbarOpen] = useState(false); // Estado para manejar la visibilidad del Snackbar
+  const [success, setSuccess] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false); 
   const router = useRouter();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
     setSuccess(false);
-    setSnackbarOpen(false); // Cerrar el Snackbar en caso de un nuevo envío
+    setSnackbarOpen(false); 
 
     if (
       username.trim() === "" ||
-      email.trim() === "" ||
-      password.trim() === "" ||
-      confirmPassword.trim() === ""
+      temporaryPassword.trim() === "" ||
+      newPassword.trim() === "" ||
+      confirmNewPassword.trim() === ""
     ) {
       setError("Todos los campos son obligatorios.");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+    if (username.includes(" ")) {
+      setError("El nombre de usuario no debe contener espacios.");
       return;
     }
-    
-    // Simular un registro exitoso
-    setSuccess(true);
-    setSnackbarOpen(true);
 
-    // Redirigir después de que el Snackbar se haya mostrado
-    setTimeout(() => {
-      router.push("/login");
-    }, 6000); // Tiempo igual al autoHideDuration del Snackbar
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setError("La nueva contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, un número y un carácter especial.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError("Las nuevas contraseñas no coinciden.");
+      return;
+    }
+
+    const user: User = {
+      username,
+      temporary_password: temporaryPassword,
+      new_password: newPassword,
+    };
+
+    try {
+      await changePassword(user);
+      setSuccess(true);
+      setSnackbarOpen(true);
+
+      setTimeout(() => {
+        router.push("/home");
+      }, 1000);
+    } catch (error) {
+      setError("Error al cambiar la contraseña.");
+    }
   };
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
-    router.push("/login"); // Redirigir también si el usuario cierra el Snackbar manualmente
+    router.push("/home"); 
   };
 
   return (
@@ -85,7 +112,7 @@ function Page() {
               padding: 3,
               boxShadow: 3,
               borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.9)', // Fondo blanco semitransparente
+              backgroundColor: 'rgba(255, 255, 255, 0.9)', 
             }}
           >
             <CardContent>
@@ -99,7 +126,7 @@ function Page() {
                   align="center"
                   sx={{ mt: 2 }}
                 >
-                  Registro
+                  Cambio de Contraseña
                 </Typography>
               </Box>
               {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -118,7 +145,7 @@ function Page() {
                   severity="success"
                   sx={{ width: '100%' }}
                 >
-                  Registro exitoso. Al iniciar sesión, deberás actualizar tu contraseña de acuerdo con las políticas de la universidad.
+                  Contraseña cambiada exitosamente. Inicia sesión con tu nueva contraseña.
                 </Alert>
               </Snackbar>
               <form onSubmit={handleSubmit}>
@@ -143,12 +170,13 @@ function Page() {
                   }}
                 />
                 <TextField
-                  label="Correo Electrónico"
+                  label="Contraseña Temporal"
+                  type="password"
                   variant="outlined"
                   fullWidth
                   margin="normal"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={temporaryPassword}
+                  onChange={(e) => setTemporaryPassword(e.target.value)}
                   sx={{
                     mb: 2,
                     "& .MuiInputLabel-root": {
@@ -163,13 +191,13 @@ function Page() {
                   }}
                 />
                 <TextField
-                  label="Contraseña"
+                  label="Nueva Contraseña"
                   type="password"
                   variant="outlined"
                   fullWidth
                   margin="normal"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   sx={{
                     mb: 2,
                     "& .MuiInputLabel-root": {
@@ -184,13 +212,13 @@ function Page() {
                   }}
                 />
                 <TextField
-                  label="Confirmar Contraseña"
+                  label="Confirmar Nueva Contraseña"
                   type="password"
                   variant="outlined"
                   fullWidth
                   margin="normal"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
                   sx={{
                     mb: 2,
                     "& .MuiInputLabel-root": {
@@ -207,24 +235,20 @@ function Page() {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="primary"
                   fullWidth
                   sx={{
-                    py: 1.5,
-                    fontSize: "16px",
-                    borderRadius: 1,
+                    backgroundColor: "#13a984",
+                    "&:hover": {
+                      backgroundColor: "#0e8e69",
+                    },
                   }}
                 >
-                  Registrarse
+                  Cambiar Contraseña
                 </Button>
-                <Box sx={{ mt: 2, textAlign: "center" }}>
-                  <Link href="/login">
-                    <Typography variant="body2" color="primary">
-                      ¿Ya tienes una cuenta? Inicia sesión aquí
-                    </Typography>
-                  </Link>
-                </Box>
               </form>
+              <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+                ¿Recuperaste tu contraseña? <Link href="/login">Inicia sesión</Link>
+              </Typography>
             </CardContent>
           </Card>
         </Grid>

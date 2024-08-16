@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from "react";
 import {
@@ -19,15 +19,13 @@ import {
   Button,
   Box,
   Alert,
-  Fab,
   Snackbar,
   CircularProgress,
   Typography,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { getUsers, addUser, deleteUser } from "../../services/api";
+import { useRouter } from 'next/navigation';
 
 interface User {
   iduser: number;
@@ -38,12 +36,14 @@ interface User {
   fechanacimiento: string;
 }
 
+interface DeleteUserParams {
+  username: string;
+}
+
 function Page() {
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [openModal, setOpenModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<DeleteUserParams | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,8 +57,15 @@ function Page() {
     fechanacimiento: "",
   });
   const [addError, setAddError] = useState("");
+  const router = useRouter(); 
 
   useEffect(() => {
+    const role = localStorage.getItem('userRole');
+    if (role !== 'admin') {
+      router.push('/');
+      return;
+    }
+
     const fetchUsers = async () => {
       setLoading(true);
       try {
@@ -73,15 +80,10 @@ function Page() {
     };
 
     fetchUsers();
-  }, []);
-
-  const handleEditClick = (user: User) => {
-    setSelectedUser(user);
-    setOpenModal(true);
-  };
+  }, [router]); 
 
   const handleDeleteClick = (user: User) => {
-    setUserToDelete(user);
+    setUserToDelete({ username: user.username });
     setOpenDeleteDialog(true);
   };
 
@@ -94,8 +96,8 @@ function Page() {
     if (userToDelete) {
       setLoading(true);
       try {
-        await deleteUser(userToDelete.username);
-        setUsers((prevUsers) => prevUsers.filter(user => user.iduser !== userToDelete?.iduser));
+        await deleteUser(userToDelete);
+        setUsers((prevUsers) => prevUsers.filter(user => user.username !== userToDelete?.username));
         setSnackbarMessage("Usuario eliminado exitosamente");
       } catch (error) {
         setSnackbarMessage("Error al eliminar el usuario. Intente de nuevo.");
@@ -105,43 +107,6 @@ function Page() {
         handleCloseDeleteDialog();
       }
     }
-  };
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setSelectedUser(null);
-  };
-
-  const handleEditUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      console.log("Usuario editado:", selectedUser);
-      setSnackbarMessage("Usuario editado exitosamente");
-      setOpenSnackbar(true);
-      setLoading(false);
-      handleCloseModal();
-    }, 1000);
-  };
-
-  const handleEditUserChange = (
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-    field: keyof User
-  ) => {
-    setSelectedUser((prevUser) => ({
-      ...prevUser,
-      [field]: event.target.value,
-    }));
-  };
-
-  const handleSnackbarClose = () => {
-    setOpenSnackbar(false);
-  };
-
-  const handleOpenAddModal = () => {
-    setOpenAddModal(true);
   };
 
   const handleCloseAddModal = () => {
@@ -204,6 +169,10 @@ function Page() {
     }
   };
 
+  const handleSnackbarClose = () => {
+    setOpenSnackbar(false);
+  };
+
   return (
     <>
       <Typography variant="h4" gutterBottom sx={{ mb: 4, textAlign: "center" }}>
@@ -253,15 +222,6 @@ function Page() {
                 <TableCell>{user.phone}</TableCell>
                 <TableCell>{user.fechanacimiento}</TableCell>
                 <TableCell align="center">
-                  <Tooltip title="Editar">
-                    <IconButton
-                      aria-label="editar"
-                      color="primary"
-                      onClick={() => handleEditClick(user)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
                   <Tooltip title="Eliminar">
                     <IconButton
                       aria-label="eliminar"
@@ -277,82 +237,6 @@ function Page() {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog open={openModal} onClose={handleCloseModal}>
-        {selectedUser && (
-          <form onSubmit={handleEditUserSubmit}>
-            <DialogTitle>Editar Usuario</DialogTitle>
-            <DialogContent>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="nombre"
-                  label="Nombre"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={selectedUser.nombre}
-                  onChange={(e) => handleEditUserChange(e, "nombre")}
-                  required
-                />
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="username"
-                  label="Nombre de Usuario"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={selectedUser.username}
-                  onChange={(e) => handleEditUserChange(e, "username")}
-                  required
-                />
-                <TextField
-                  margin="dense"
-                  id="email"
-                  label="Correo Electrónico"
-                  type="email"
-                  fullWidth
-                  variant="outlined"
-                  value={selectedUser.email}
-                  onChange={(e) => handleEditUserChange(e, "email")}
-                  required
-                />
-                <TextField
-                  margin="dense"
-                  id="phone"
-                  label="Teléfono"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={selectedUser.phone}
-                  onChange={(e) => handleEditUserChange(e, "phone")}
-                  required
-                />
-                <TextField
-                  margin="dense"
-                  id="fechanacimiento"
-                  label="Fecha de Nacimiento"
-                  type="date"
-                  fullWidth
-                  variant="outlined"
-                  InputLabelProps={{ shrink: true }}
-                  value={selectedUser.fechanacimiento}
-                  onChange={(e) => handleEditUserChange(e, "fechanacimiento")}
-                  required
-                />
-              </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseModal}>Cancelar</Button>
-              <Button type="submit" color="primary" disabled={loading}>
-                {loading ? <CircularProgress size={24} /> : "Guardar"}
-              </Button>
-            </DialogActions>
-          </form>
-        )}
-      </Dialog>
 
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Confirmar Eliminación</DialogTitle>
@@ -390,17 +274,6 @@ function Page() {
               />
               <TextField
                 margin="dense"
-                id="username"
-                label="Nombre de Usuario"
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={newUser.username}
-                onChange={(e) => handleAddUserChange(e, "username")}
-                required
-              />
-              <TextField
-                margin="dense"
                 id="email"
                 label="Correo Electrónico"
                 type="email"
@@ -433,8 +306,19 @@ function Page() {
                 onChange={(e) => handleAddUserChange(e, "fechanacimiento")}
                 required
               />
+              <TextField
+                margin="dense"
+                id="username"
+                label="Usuario"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newUser.username}
+                onChange={(e) => handleAddUserChange(e, "username")}
+                required
+              />
+              {addError && <Alert severity="error">{addError}</Alert>}
             </Box>
-            {addError && <Alert severity="error" sx={{ mt: 2 }}>{addError}</Alert>}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseAddModal}>Cancelar</Button>
@@ -445,25 +329,12 @@ function Page() {
         </form>
       </Dialog>
 
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={handleOpenAddModal}
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
-      >
-        <PersonAddIcon />
-      </Fab>
-
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
       >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarMessage.includes("error") ? "error" : "success"}
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={handleSnackbarClose} severity={snackbarMessage.includes("Error") ? "error" : "success"}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
